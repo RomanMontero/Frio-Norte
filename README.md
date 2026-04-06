@@ -1,0 +1,1439 @@
+[index.html](https://github.com/user-attachments/files/26492368/index.html)[Uploading index.h<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frio Norte SRL - Sistema Integral PRO</title>
+    
+    <!-- Librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root { --red: #e53e3e; --dark: #1a202c; --blue: #3182ce; --green: #38a169; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: #f0f4f8; color: #2d3748; padding-bottom: 90px; }
+        
+        header { background: #009de0; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
+        header .home-icon { font-size: 20px; color: white; cursor: pointer; text-decoration: none; }
+        header .user-info { font-size: 14px; }
+
+        /* Nav Superior (Menú Horizontal Estilo ERP) */
+        nav.top-nav { background: white; border-bottom: 1px solid #ddd; padding: 5px 15px; display: flex; align-items: center; gap: 8px; font-size: 14px; overflow-x: auto; white-space: nowrap; position: sticky; top: 42px; z-index: 999; }
+        nav.top-nav a { color: #555; text-decoration: none; padding: 5px 8px; cursor: pointer; transition: 0.2s; border-radius: 4px; }
+        nav.top-nav a:hover { color: var(--blue); background: #f0f7ff; }
+        nav.top-nav .sep { color: #ccc; font-weight: normal; }
+        nav.top-nav a.active { color: var(--blue); font-weight: bold; }
+
+        /* Toolbar (Sub-Nav con Iconos) */
+        .toolbar { background: #f1f3f4; border-bottom: 1px solid #e0e0e0; padding: 8px 15px; display: none; align-items: center; gap: 20px; overflow-x: auto; }
+        .toolbar.active { display: flex; }
+        .tool-item { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; min-width: 70px; opacity: 0.7; transition: 0.3s; padding: 5px; border-radius: 8px; }
+        .tool-item:hover { opacity: 1; background: #e8eaed; }
+        .tool-item.active { opacity: 1; border-bottom: 3px solid #009de0; border-radius: 8px 8px 0 0; background: #fff; }
+        .tool-icon { font-size: 24px; margin-bottom: 4px; }
+        .tool-label { font-size: 11px; font-weight: 600; color: #5f6368; white-space: nowrap; }
+
+        /* Estilos de Tabla de Administración */
+        .admin-table-container { background: white; border-radius: 0; box-shadow: none; margin-top: 10px; border: 1px solid #ddd; overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .admin-table th { background: #72aee6; color: white; text-align: left; padding: 10px; border: 1px solid #c3e0ff; position: relative; cursor: pointer; }
+        .admin-table th::after { content: " ▾"; font-size: 10px; opacity: 0.5; }
+        .admin-table td { padding: 10px; border: 1px solid #eee; color: #333; }
+        .admin-table tr:nth-child(even) { background: #f9f9f9; }
+        .admin-table tr:hover { background: #f0f7ff; }
+        
+        .action-bar { background: #eef1f5; padding: 8px 15px; border: 1px solid #d1d9e1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+        .btn-tool { background: white; border: 1px solid #ccc; padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 5px; color: #444; }
+        .btn-tool:hover { background: #f8f9fa; border-color: #999; }
+        .search-tool { flex: 1; min-width: 150px; display: flex; border: 1px solid #ccc; background: white; border-radius: 4px; overflow: hidden; }
+        .search-tool input { border: none; padding: 6px 10px; font-size: 13px; width: 100%; margin: 0; }
+        .search-tool button { border: none; background: #f8f9fa; padding: 6px 10px; cursor: pointer; border-left: 1px solid #ccc; }
+
+        .pagination { display: flex; justify-content: center; margin: 15px 0; gap: 5px; }
+        .page-item { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #3182ce; color: white; font-weight: bold; cursor: pointer; }
+
+        /* Perfil de Empresa (Estilo ERP) */
+        .profile-container { background: #f8f9fa; border: 1px solid #ddd; padding: 0; }
+        .profile-header { background: #009de0; color: white; padding: 8px 15px; font-weight: bold; font-size: 14px; text-transform: uppercase; margin-top: 10px; }
+        .profile-row { display: flex; align-items: center; padding: 5px 15px; border-bottom: 1px solid #eee; background: white; }
+        .profile-row label { width: 220px; font-size: 12px; color: #333; font-weight: bold; }
+        .profile-row input, .profile-row select { flex: 1; border: 1px solid #ccc; border-radius: 2px; padding: 4px 8px; font-size: 13px; margin: 0; height: 28px; }
+        .profile-row span { flex: 1; font-size: 13px; color: #333; padding-left: 8px; }
+        
+        .logo-editor { text-align: center; padding: 20px; background: #f8f9fa; border-top: 1px solid #ddd; }
+        .logo-preview-box { width: 120px; height: 120px; margin: 0 auto 10px auto; border: 1px solid #ddd; background: white; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .logo-preview-box img { max-width: 100%; max-height: 100%; }
+        .logo-actions { display: flex; justify-content: center; gap: 15px; margin-top: 5px; }
+        .logo-actions button { background: none; border: none; font-size: 18px; cursor: pointer; opacity: 0.7; }
+        .logo-actions button:hover { opacity: 1; transform: scale(1.2); }
+
+        /* Nav Inferior - Oculto */
+        nav.bottom-nav { display: none !important; }
+        nav.bottom-nav button { flex: 1; padding: 12px 2px; border: none; background: none; font-size: 9px; font-weight: bold; color: #718096; cursor: pointer; text-transform: uppercase; }
+        nav.bottom-nav button.active { color: var(--red); border-top: 3px solid var(--red); background: #fff5f5; }
+
+        .section { padding: 15px; display: none; width: 100%; box-sizing: border-box; }
+        .section.active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #edf2f7; border-radius: 8px; box-sizing: border-box; font-size: 15px; outline: none; }
+        button.btn-main { width: 100%; padding: 12px; background: var(--red); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
+        /* Listas */
+        .list-item { background: white; padding: 15px; border-radius: 10px; margin-bottom: 8px; border-left: 5px solid var(--red); box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .edit-btn { background: #edf2f7; border: none; padding: 8px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+
+        /* Barra de Progreso */
+        .prog-container { width: 100%; background: #edf2f7; border-radius: 20px; height: 15px; margin: 10px 0; display: none; overflow: hidden; }
+        .prog-bar { height: 100%; background: var(--green); width: 0%; transition: width 0.1s; }
+
+        /* Modales */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 10px; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 15px; max-height: 90vh; overflow-y: auto; padding: 20px; position: relative; }
+        
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 10px; }
+        .badge { background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        
+        /* Búsqueda Inteligente */
+        .search-results { max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: -5px; display: none; position: absolute; width: calc(100% - 30px); z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .search-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .search-item:hover { background: #f7fafc; color: var(--red); font-weight: bold; }
+        .selected-badge { background: #c6f6d5; color: #276749; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none; font-size: 13px; font-weight: bold; border: 1px solid #9ae6b4; }
+        
+        /* Town Filters */
+        .town-container { display: flex; overflow-x: auto; gap: 8px; padding: 5px 0; margin-bottom: 10px; scrollbar-width: none; }
+        .town-container::-webkit-scrollbar { display: none; }
+        .town-btn { padding: 8px 16px; background: white; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 13px; font-weight: bold; color: #4a5568; cursor: pointer; white-space: nowrap; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .town-btn.active { background: var(--dark); color: white; border-color: var(--dark); }
+        
+        /* Gestión de Stock Interno */
+        .stock-row { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #edf2f7; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stock-info { flex: 1; }
+        .stock-info b { display: block; font-size: 14px; color: #1a202c; text-transform: uppercase; }
+        .stock-info small { color: #718096; font-weight: bold; font-size: 12px; }
+        .stock-actions { display: flex; gap: 8px; }
+        .btn-edit { background: #ebf8ff; color: #3182ce; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-edit:hover { background: #bee3f8; }
+        .btn-del { background: #fff5f5; color: #e53e3e; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-del:hover { background: #fed7d7; }
+
+        /* Estilos de Impresión de Códigos QR */
+        @media print {
+            body * { visibility: hidden; }
+            #print-qr-area, #print-qr-area * { visibility: visible; }
+            #print-qr-area { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+            #print-qr-area canvas { width: 300px; height: 300px; }
+            #print-qr-area img { width: 300px; height: 300px; }
+            #print-qr-area h1 { font-size: 40px; margin-bottom: 30px; }
+            #modal-qr .modal-content { box-shadow: none; border: none; }
+        }
+        
+        /* Dashboard Layout */
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .dash-card { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        .dash-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); border-color: #cbd5e0; }
+        .dash-icon { font-size: 32px; margin-bottom: 12px; display: inline-block; padding: 15px; border-radius: 50%; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .dash-title { font-weight: 800; font-size: 15px; color: #1a202c; margin-bottom: 5px; }
+        .dash-subtitle { font-size: 11px; color: #718096; font-weight: 600; text-transform: uppercase; }
+        .dash-header { padding: 10px 5px; margin-bottom: 5px; text-align: center; }
+        .dash-header h2 { margin: 0; color: #2d3748; font-size: 22px; font-weight: 800; }
+        .dash-header p { margin: 5px 0 0 0; color: #718096; font-size: 14px; }
+        
+        /* Modo Restringido para Repositores (escaneo de QR) */
+        body.restricted-mode header { display: none; }
+        body.restricted-mode nav.bottom-nav { display: none; }
+        body.restricted-mode .modal { inset: 0; padding: 0; background: var(--dark); }
+        body.restricted-mode .modal-content { border-radius: 0; max-height: 100vh; height: 100vh; width: 100vw; max-width: 100vw; top: 0; padding: 20px;}
+    </style>
+</head>
+<body>
+
+<div id="loading" style="position:fixed; inset:0; background:white; z-index:9999; display:flex; align-items:center; justify-content:center; font-weight:bold;">Cargando Frio Norte SRL...</div>
+
+<header>
+    <a href="#" class="home-icon" onclick="showSec('dashboard')">
+        <img src="logo.png" alt="Frio Norte Logo" style="height: 44px; width: 44px; vertical-align: middle; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+    </a>
+    <div class="user-info">FRIO NORTE SRL - Roman &Rightarrow;</div>
+</header>
+
+<nav class="top-nav">
+    <a id="lnk-sistema" onclick="showSec('sistema')">Sistema</a> <span class="sep">|</span>
+    <a id="lnk-personas" onclick="showSec('personas')">Personas</a> <span class="sep">|</span>
+    <a id="lnk-stock" onclick="showSec('stock')">Stock</a> <span class="sep">|</span>
+    <a id="lnk-servicios" onclick="showSec('servicios')">Servicios</a> <span class="sep">|</span>
+    <a id="lnk-facturacion" onclick="showSec('facturacion')">Facturacion</a> <span class="sep">|</span>
+    <a id="lnk-fondos" onclick="showSec('fondos')">Fondos</a> <span class="sep">|</span>
+    <a id="lnk-distribucion" onclick="showSec('distribucion')">Distribucion y Logistica</a> <span class="sep">|</span>
+    <a id="lnk-paneles" onclick="showSec('paneles')">Paneles de Control</a>
+</nav>
+
+<!-- TOOLBARS POR SECTOR -->
+<div id="toolbar-sistema" class="toolbar">
+    <div class="tool-item active" onclick="showSec('sucursales')">
+        <div class="tool-icon">🏢</div>
+        <div class="tool-label">Sucursales</div>
+    </div>
+    <div class="tool-item">
+        <div class="tool-icon">👤</div>
+        <div class="tool-label">Usuarios</div>
+    </div>
+    <div class="tool-item">
+        <div class="tool-icon">📝</div>
+        <div class="tool-label">Perfil</div>
+    </div>
+    <div class="tool-item" onclick="showSec('company-profile')">
+        <div class="tool-icon">🏢</div>
+        <div class="tool-label">Perfil de la Empresa</div>
+    </div>
+    <div class="tool-item">
+        <div class="tool-icon">💰</div>
+        <div class="tool-label">Mi Cuenta Corriente</div>
+    </div>
+</div>
+
+<div id="toolbar-stock" class="toolbar">
+    <div class="tool-item" onclick="showSec('stock')">
+        <div class="tool-icon">📸</div>
+        <div class="tool-label">Stock y Cámaras</div>
+    </div>
+    <div class="tool-item" onclick="showSec('products')">
+        <div class="tool-icon">🍖</div>
+        <div class="tool-label">Catálogo Master</div>
+    </div>
+    <div class="tool-item" onclick="showSec('config')">
+        <div class="tool-icon">⚙️</div>
+        <div class="tool-label">Configurar Cámaras</div>
+    </div>
+</div>
+
+<div id="toolbar-personas" class="toolbar">
+    <div class="tool-item" onclick="showSec('customers')">
+        <div class="tool-icon">👥</div>
+        <div class="tool-label">Clientes</div>
+    </div>
+</div>
+
+<div id="toolbar-facturacion" class="toolbar">
+    <div class="tool-item" onclick="showSec('orders')">
+        <div class="tool-icon">📝</div>
+        <div class="tool-label">Pedido/Venta</div>
+    </div>
+</div>
+
+<!-- 0. PANEL INICIAL (DASHBOARD) -->
+<section id="sec-dashboard" class="section active">
+    <div class="dash-header">
+        <h2>👋 ¡Hola!</h2>
+        <p>¿Qué necesitas hacer hoy?</p>
+    </div>
+    
+    <div class="dash-grid">
+        <div class="dash-card" onclick="showSec('stock')">
+            <div class="dash-icon" style="color: var(--dark)">📦</div>
+            <div class="dash-title">Stock e Inventario</div>
+            <div class="dash-subtitle">Gestión de Cámaras</div>
+        </div>
+        <div class="dash-card" onclick="showSec('orders')">
+            <div class="dash-icon" style="color: var(--dark)">📝</div>
+            <div class="dash-title">Punto de Venta</div>
+            <div class="dash-subtitle">Nuevos Pedidos</div>
+        </div>
+        <div class="dash-card" onclick="showSec('customers')">
+            <div class="dash-icon" style="color: var(--dark)">👥</div>
+            <div class="dash-title">Directorio de Clientes</div>
+            <div class="dash-subtitle">Importar y Editar</div>
+        </div>
+        <div class="dash-card" onclick="showSec('products')">
+            <div class="dash-icon" style="color: var(--dark)">🍖</div>
+            <div class="dash-title">Catálogo Master</div>
+            <div class="dash-subtitle">Base de Productos</div>
+        </div>
+        <div class="dash-card" style="grid-column: span 2;" onclick="showSec('config')">
+            <div class="dash-icon" style="color: #718096">⚙️</div>
+            <div class="dash-title">Configuración del Sistema</div>
+            <div class="dash-subtitle">Ajustes</div>
+        </div>
+    </div>
+</section>
+
+<!-- 1. STOCK (Cámaras) -->
+<section id="sec-stock" class="section">
+    <div class="card">
+        <div id="reader"></div>
+        <input type="text" id="stock-search" placeholder="🔍 Buscar Cámara o Producto en stock..." onkeyup="renderStock()">
+    </div>
+    <div id="stock-list"></div>
+</section>
+
+<!-- 2. PEDIDOS -->
+<section id="sec-orders" class="section">
+    <div class="card">
+        <h3>Nuevo Pedido</h3>
+        <select id="ord-cust-sel"><option value="">Seleccionar Cliente...</option></select>
+        <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-top: 10px; border: 1px solid #e2e8f0; position: relative;">
+            <div id="ord-selected-badge" class="selected-badge"></div>
+            <input type="text" id="ord-prod-search" placeholder="🔍 Buscar producto en todo el stock..." onkeyup="filterStockGlobal()" autocomplete="off">
+            <div id="ord-res" class="search-results"></div>
+            
+            <input type="number" id="ord-qty" placeholder="Cantidad / Kilos">
+            <button class="btn-main" style="background:var(--dark)" onclick="addToCart()">+ AGREGAR AL CARRITO</button>
+        </div>
+        <div id="cart-list" style="margin-top:15px;"></div>
+        <button id="btn-sell" class="btn-main" style="display:none; background:var(--green)" onclick="finalizeOrder()">✅ CONFIRMAR VENTA</button>
+    </div>
+    <div id="order-history"></div>
+</section>
+
+<!-- 3. CLIENTES -->
+<section id="sec-customers" class="section">
+    <div class="card" style="border: 2px dashed var(--blue)">
+        <h4>Importar Clientes (Excel / CSV)</h4>
+        <input type="file" id="csv-cust" accept=".csv, .xlsx, .xls">
+        <button class="btn-main" style="background:var(--blue)" onclick="importFile('customers')">PROCESAR EXCEL</button>
+        <div class="prog-container" id="prog-cust"><div class="prog-bar" id="bar-cust"></div></div>
+    </div>
+    <div class="card">
+        <h3>Añadir Cliente</h3>
+        <input type="text" id="c-name" placeholder="Denominación">
+        <input type="text" id="c-cuit" placeholder="CUIT">
+        <input type="text" id="c-addr" placeholder="Dirección">
+        <button class="btn-main" onclick="saveCustomer()">GUARDAR CLIENTE</button>
+    </div>
+    
+    <div id="town-filters" class="town-container"></div>
+    <input type="text" id="cust-search" placeholder="🔍 Buscar cliente por nombre o CUIT..." onkeyup="renderCustomers()">
+    
+    <div id="cust-list"></div>
+</section>
+
+<!-- 4. CATÁLOGO DE PRODUCTOS (GLOBAL) -->
+<section id="sec-products" class="section">
+    <div class="card" style="border: 2px dashed var(--green)">
+        <h4>Importar Catálogo (Excel / CSV)</h4>
+        <input type="file" id="csv-prod" accept=".csv, .xlsx, .xls">
+        <button class="btn-main" style="background:var(--green)" onclick="importFile('products')">PROCESAR PRODUCTOS</button>
+        <div class="prog-container" id="prog-prod"><div class="prog-bar" id="bar-prod"></div></div>
+    </div>
+    <div class="card">
+        <h3>Nuevo Producto Global</h3>
+        <input type="text" id="p-name" placeholder="Nombre del producto">
+        <input type="number" id="p-price" placeholder="Precio unitario">
+        <button class="btn-main" onclick="saveMasterProduct()">CREAR PRODUCTO</button>
+    </div>
+    <input type="text" id="master-prod-search" placeholder="🔍 Buscar producto en todo el catálogo..." onkeyup="renderMasterProducts()">
+    <div id="master-prod-list"></div>
+</section>
+
+<!-- 5. CONFIGURACIÓN -->
+<section id="sec-config" class="section">
+    <div class="card">
+        <h3>Gestión de Cámaras</h3>
+        <input type="text" id="new-cam-name" placeholder="Nombre de la cámara">
+        <button class="btn-main" onclick="createCamera()">CREAR CÁMARA</button>
+    </div>
+    <div id="config-cam-list"></div>
+</section>
+
+<!-- MÓDULO NUEVO: ADMINISTRAR SUCURSALES -->
+<section id="sec-sucursales" class="section">
+    <div style="font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #444; border-bottom: 2px solid #009de0; padding-bottom: 5px;">
+        🔍 Administrar Sucursales
+    </div>
+    
+    <div class="action-bar">
+        <button class="btn-tool" onclick="openSucModal()">📄 Nuevo</button>
+        <button class="btn-tool" onclick="editSelectedSucursal()">✏️ Modificar</button>
+        <button class="btn-tool" onclick="deleteSucursal()">❌ Eliminar</button>
+        <div class="search-tool">
+            <input type="text" placeholder="Buscar por nombre..." id="suc-search-input" onkeyup="renderSucursales()">
+            <button>🔍</button>
+        </div>
+    </div>
+
+    <div class="pagination">
+        <div style="font-size: 12px; margin-right: 10px; display: flex; align-items: center;">Página:</div>
+        <div class="page-item">1</div>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width: 30px;"><input type="checkbox"></th>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Orden</th>
+                    <th>Numero</th>
+                    <th>Dirección</th>
+                    <th>Ciudad</th>
+                    <th>Provincia</th>
+                    <th>Telefono</th>
+                </tr>
+            </thead>
+            <tbody id="sucursales-tbody">
+                <!-- Se llena dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- 5. PERFIL DE LA EMPRESA -->
+<section id="sec-company-profile" class="section">
+    <div style="font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #444; border-bottom: 2px solid #009de0; padding-bottom: 5px;">
+        🔍 Perfil de la Empresa
+    </div>
+
+    <div class="profile-container">
+        <div class="profile-header">Datos</div>
+        
+        <div class="profile-row"><label>ID:</label><span id="cp-id">312</span></div>
+        <div class="profile-row"><label>(*) Nombre:</label><input type="text" id="cp-name"></div>
+        <div class="profile-row"><label>Titular:</label><input type="text" id="cp-owner"></div>
+        <div class="profile-row"><label>DNI Titular:</label><input type="text" id="cp-owner-dni"></div>
+        <div class="profile-row"><label>CUIT:</label><input type="text" id="cp-cuit"></div>
+        <div class="profile-row"><label>N° de Ingresos Brutos:</label><input type="text" id="cp-iibb"></div>
+        <div class="profile-row">
+            <label>Provincia:</label>
+            <select id="cp-prov">
+                <option value="LA PAMPA">LA PAMPA</option>
+                <option value="BUENOS AIRES">BUENOS AIRES</option>
+                <option value="CORDOBA">CORDOBA</option>
+            </select>
+        </div>
+        <div class="profile-row">
+            <label>Ciudad:</label>
+            <select id="cp-city">
+                <option value="GENERAL PICO">GENERAL PICO</option>
+                <option value="SANTA ROSA">SANTA ROSA</option>
+            </select>
+        </div>
+        <div class="profile-row"><label>Dirección:</label><input type="text" id="cp-addr"></div>
+        <div class="profile-row"><label>Codigo Postal:</label><input type="text" id="cp-zip"></div>
+        <div class="profile-row"><label>Teléfono:</label><input type="text" id="cp-tel"></div>
+        <div class="profile-row"><label>E-mail:</label><input type="text" id="cp-email"></div>
+        <div class="profile-row"><label>Descripción:</label><input type="text" id="cp-desc"></div>
+        <div class="profile-row"><label>Proceso obligatorio... :</label><input type="text" id="cp-proc"></div>
+        <div class="profile-row">
+            <label>Fecha Inicio Actividades:</label>
+            <input type="date" id="cp-start" style="width: 150px;">
+        </div>
+        <div class="profile-row">
+            <label>Tipo de Empresa:</label>
+            <select id="cp-type">
+                <option value="REFRIGERACION">REFRIGERACION</option>
+                <option value="OTRO">OTRO</option>
+            </select>
+        </div>
+
+        <div class="profile-header">Datos Extras</div>
+        <div class="profile-row">
+            <label>(*) Definir Condicion IVA:</label>
+            <select id="cp-iva">
+                <option value="Responsable Inscripto">Responsable Inscripto</option>
+                <option value="Monotributista">Monotributista</option>
+            </select>
+        </div>
+        <div class="profile-row"><label>Nro Agente Recaudación DGR:</label><input type="text" id="cp-agente"></div>
+        <div class="profile-row"><label>Numero RUCA:</label><input type="text" id="cp-ruca"></div>
+
+        <div class="logo-editor">
+            <div class="logo-preview-box" style="border-radius: 50%; background: white;">
+                <img id="cp-logo-img" src="logo.png" alt="Logo de la Empresa" style="border-radius: 50%; object-fit: cover; width: 100%; height: 100%;">
+            </div>
+            <div class="logo-actions">
+                <button title="Cambiar Logo" onclick="document.getElementById('file-logo').click()">🔄</button>
+                <input type="file" id="file-logo" hidden accept="image/*" onchange="previewLogo(event)">
+                <button title="Quitar Logo" onclick="resetLogo()">❌</button>
+            </div>
+            <button class="btn-main" onclick="saveCompanyProfile()" style="background:var(--blue); width: 150px; margin-top:20px;">ACEPTAR</button>
+        </div>
+    </div>
+</section>
+
+<div id="modal-sucursal" class="modal">
+    <div class="modal-content">
+        <h3 id="suc-modal-title">Nueva Sucursal</h3>
+        <input type="hidden" id="suc-id-hidden">
+        <label>Nombre de Sucursal</label>
+        <input type="text" id="suc-name" placeholder="Ej. General Pico">
+        <label>Orden</label>
+        <input type="number" id="suc-order" placeholder="Ej. 1">
+        <label>Número de Sucursal (4 dígitos)</label>
+        <input type="text" id="suc-number" placeholder="Ej. 0003">
+        <label>Tipo de Facturación</label>
+        <select id="suc-type">
+            <option value="ARCA">OFICIAL (Factura A / ARCA)</option>
+            <option value="INTERNO">INTERNO (Sin reporte a ARCA)</option>
+        </select>
+        <label>Dirección</label>
+        <input type="text" id="suc-addr">
+        <label>Ciudad</label>
+        <input type="text" id="suc-city">
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn-main" onclick="saveSucursal()" style="background:var(--blue)">GUARDAR</button>
+            <button class="btn-main" onclick="closeModal()" style="background:#cbd5e0; color:black">CANCELAR</button>
+        </div>
+    </div>
+</div>
+
+
+<nav class="bottom-nav">
+    <button id="nav-dashboard" class="active" onclick="showSec('dashboard')">🏠 INICIO</button>
+    <button id="nav-stock" onclick="showSec('stock')">📦 STOCK</button>
+    <button id="nav-orders" onclick="showSec('orders')">📝 PEDIDOS</button>
+    <button id="nav-customers" onclick="showSec('customers')">👥 CLIENTES</button>
+    <button id="nav-products" onclick="showSec('products')">🍖 CATÁLOGO</button>
+    <button id="nav-config" onclick="showSec('config')">⚙️ CONFIG</button>
+</nav>
+
+<!-- MODALES -->
+<div id="modal-edit" class="modal">
+    <div class="modal-content">
+        <h3 id="edit-title">Editar</h3>
+        <div id="edit-fields"></div>
+        <button class="btn-main" onclick="updateEntry()">GUARDAR CAMBIOS</button>
+        <button onclick="closeModal()" style="position:absolute; top:10px; right:15px; border:none; background:none; font-size:25px;">&times;</button>
+    </div>
+</div>
+
+<div id="modal-cam" class="modal">
+    <div class="modal-content">
+        <h2 id="m-cam-title">Cámara</h2>
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 15px; position: relative;">
+            <h4>Asignar Producto del Catálogo</h4>
+            <div id="m-cam-selected-badge" class="selected-badge"></div>
+            <input type="text" id="m-cam-prod-input" placeholder="🔍 Escribir nombre del producto..." onkeyup="filterMasterForCam()" autocomplete="off">
+            <div id="m-cam-res" class="search-results"></div>
+            
+            <input type="number" id="m-cam-qty" placeholder="Cantidad / Kilos">
+            <button class="btn-main" onclick="addProdToCamera()">AÑADIR A CÁMARA</button>
+        </div>
+        <div id="m-cam-list"></div>
+        <button onclick="closeModal()" style="position:absolute; top:10px; right:15px; border:none; background:none; font-size:25px;">&times;</button>
+    </div>
+</div>
+
+<div id="modal-qr" class="modal">
+    <div class="modal-content" style="text-align: center;">
+        <h2 id="qr-cam-title"></h2>
+        <div id="print-qr-area" style="margin: 20px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: white; border-radius: 10px;">
+            <h1 id="qr-print-title" style="color: var(--dark); font-size: 24px;"></h1>
+            <div id="qr-code-img" style="display:flex; justify-content:center; margin-top:20px;"></div>
+            <p style="margin-top: 20px; font-size: 14px; color: #718096; font-weight: bold;">ESCANEA PARA GESTIONAR ESTA CÁMARA</p>
+        </div>
+        <button class="btn-main" style="background:var(--blue); margin-bottom: 10px;" onclick="window.print()">🖨️ IMPRIMIR QR</button>
+        <button onclick="closeModal()" style="position:absolute; top:10px; right:15px; border:none; background:none; font-size:25px;">&times;</button>
+    </div>
+</div>
+
+<script>
+    // --- FIREBASE CONFIG (Tu configuración) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCtdnZQlOvBo9lfLegSY3xeFOixwIRBs_c",
+        authDomain: "frio-norte-srl.firebaseapp.com",
+        projectId: "frio-norte-srl",
+        storageBucket: "frio-norte-srl.firebasestorage.app",
+        messagingSenderId: "148896191282",
+        appId: "1:148896191282:web:22064ee40f82a39a8d7d2b",
+        databaseURL: "https://frio-norte-srl-default-rtdb.firebaseio.com/"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let data = { slots: {}, customers: {}, products: {}, orders: {}, sucursales: {}, companyProfile: {} };
+    let cart = [];
+    let curEdit = { type: '', id: '' };
+    let curCamId = null;
+    let initialLoad = true;
+    
+    // Filtros de Productos
+    let currentProdCategory = "TODOS";
+
+    // Sincronización Realtime
+    db.ref('/').on('value', (snap) => {
+        data = snap.val() || { slots: {}, customers: {}, products: {}, orders: {}, sucursales: {}, companyProfile: {} };
+        
+        // Inicializar perfil si no existe
+        if (!data.companyProfile || Object.keys(data.companyProfile).length === 0) {
+            const initialProfile = {
+                id: '312', name: 'FRIO NORTE SRL', cuit: '30715836269', iibb: '256931/0',
+                prov: 'LA PAMPA', city: 'GENERAL PICO', addr: '304 1188', zip: '6360',
+                tel: '2302-207270', email: 'frionortesrl@gmail.com', startDate: '2017-12-01',
+                iva: 'Responsable Inscripto', logo: 'logo.png'
+            };
+            db.ref('companyProfile').set(initialProfile);
+            return;
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        renderAll();
+
+        // Control de Deep Linking al cargar Firebase
+        if (initialLoad) {
+            initialLoad = false;
+            const urlParams = new URLSearchParams(window.location.search);
+            const camId = urlParams.get('cam');
+            if (camId && data.slots[camId]) {
+                document.body.classList.add('restricted-mode');
+                openCamMod(camId);
+                // Ocultar botón de cerrado en modo restringido para atrapar al usuario en este slot
+                const closeBtn = document.querySelector('#modal-cam button[onclick="closeModal()"]');
+                if (closeBtn) closeBtn.style.display = 'none';
+            } else {
+                showSec('dashboard');
+            }
+        }
+    });
+
+    function showSec(id) {
+        // Ocultar todas las secciones
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        
+        // Ocultar todos los toolbars
+        document.querySelectorAll('.toolbar').forEach(t => t.classList.remove('active'));
+        
+        // Quitar activos de los links del nav
+        document.querySelectorAll('.top-nav a').forEach(a => a.classList.remove('active'));
+
+        // Mostrar la sección correspondiente
+        const el = document.getElementById('sec-' + id);
+        if(el) el.classList.add('active');
+
+        // Lógica de Toolbars e IDs de navegación
+        if (['sucursales', 'usuarios', 'perfil', 'sistema'].includes(id)) {
+            document.getElementById('toolbar-sistema').classList.add('active');
+            document.getElementById('lnk-sistema').classList.add('active');
+        } else if (['stock', 'products', 'config'].includes(id)) {
+            document.getElementById('toolbar-stock').classList.add('active');
+            document.getElementById('lnk-stock').classList.add('active');
+        } else if (['customers', 'personas'].includes(id)) {
+            document.getElementById('toolbar-personas').classList.add('active');
+            document.getElementById('lnk-personas').classList.add('active');
+        } else if (['orders', 'facturacion'].includes(id)) {
+            document.getElementById('toolbar-facturacion').classList.add('active');
+            document.getElementById('lnk-facturacion').classList.add('active');
+        } else {
+            const lnk = document.getElementById('lnk-' + id);
+            if(lnk) lnk.classList.add('active');
+        }
+        
+        if(id === 'stock') initScan(); else stopScan();
+    }
+
+    // --- IMPORTADORES DE EXCEL / CSV ---
+    async function importFile(type) {
+        const input = document.getElementById(type === 'customers' ? 'csv-cust' : 'csv-prod');
+        if(!input.files[0]) return alert("Selecciona un archivo Excel (.xlsx) o CSV");
+        
+        try {
+            const bar = document.getElementById(type === 'customers' ? 'bar-cust' : 'bar-prod');
+            const cont = document.getElementById(type === 'customers' ? 'prog-cust' : 'prog-prod');
+            
+            cont.style.display = 'block';
+            bar.style.width = '10%';
+            
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                const data = new Uint8Array(e.target.result);
+                // SheetJS leerá perfectamente el archivo aunque le hayan cambiado el nombre de xlsx a csv
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Extraer a formato [ ["Denominacion", "Tipo Persona", ...], ... ]
+                const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+                
+                if (rows.length < 2) return alert("El archivo parece estar vacío o no tener el formato correcto.");
+
+                const updates = {};
+                
+                let currentCategory = "OTROS";
+                
+                // Empezar desde la fila 1 para saltar el encabezado
+                for(let i=1; i<rows.length; i++) {
+                    const col = rows[i];
+                    if(col.length === 0 || !col[0]) continue; // Saltar filas vacías
+                    
+                    const newKey = db.ref(type).push().key; 
+                    
+                    if(type === 'customers') {
+                        // PDF Original Columnas: Denominacion(0), Tipo(1), Dir(2), Tel(3), Email(4), DNI(5), CUIT(6), Iva(7)
+                        const name = String(col[0]).trim();
+                        const addr = String(col[2] || "").trim();
+                        const phone = String(col[3] || "").trim();
+                        const cuit = String(col[6] || col[5] || "").trim(); // DNI como fallback si no hay CUIT
+                        const iva = String(col[7] || col[8] || "").trim(); 
+                        
+                        updates[newKey] = { name: name || "Sin Nombre", addr, phone, cuit, iva };
+                    } else {
+                        let name = String(col[0] || "Sin Nombre").trim();
+                        // El precio normalmente viene en la columna 4. Quitamos comas de miles.
+                        let priceStr = String(col[4] !== undefined ? col[4] : (col[1] || ""));
+                        let price = parseFloat(priceStr.replace(/,/g, '')) || 0;
+
+                        // Si el precio es 0 y el string estaba vacío, lo tratamos como Categoría
+                        if (price === 0 && !priceStr.trim()) {
+                            let catName = name.toUpperCase();
+                            if (catName && catName !== "TODOS LOS PRODUCTOS" && catName !== "GRANEL") {
+                                currentCategory = catName;
+                            }
+                            updates[newKey] = { name, price: 0, category: currentCategory, isHeader: true };
+                        } else {
+                            updates[newKey] = { name, price, category: currentCategory, isHeader: false };
+                        }
+                    }
+                    
+                    if (i % 20 === 0) bar.style.width = Math.round((i/rows.length)*100) + '%';
+                }
+                
+                // Preguntar al usuario si desea limpiar el catálogo previo
+                if (confirm(`¿Deseas REEMPLAZAR tu lista actual de ${type === 'customers' ? 'clientes' : 'productos'} con este archivo? (Aceptar borra los anteriores)`)) {
+                    await db.ref(type).set(updates);
+                } else {
+                    await db.ref(type).update(updates);
+                }
+                
+                bar.style.width = '100%';
+                
+                setTimeout(() => { 
+                    cont.style.display = 'none'; 
+                    alert(`¡Éxito! Se subieron ${Object.keys(updates).length} registrados correctamente.`); 
+                    input.value = ""; 
+                }, 600);
+            };
+
+            reader.readAsArrayBuffer(file);
+
+        } catch (error) {
+            console.error("Error al importar:", error);
+            alert("Hubo un error al procesar el documento. Intenta guardarlo como .xlsx de Excel normal.");
+        }
+    }
+
+    // --- RENDERIZADO ---
+    function renderAll() {
+        renderStock();
+        renderTownFilters();
+        renderCustomers();
+        renderMasterProducts();
+        renderOrders();
+        renderSucursales();
+        renderCompanyProfile();
+        updateDropdowns();
+        if(curCamId) renderCamProds();
+    }
+    
+    // PERFIL DE EMPRESA
+    function renderCompanyProfile() {
+        const cp = data.companyProfile;
+        if(!cp || !document.getElementById('cp-name')) return;
+        
+        document.getElementById('cp-id').innerText = cp.id || "312";
+        document.getElementById('cp-name').value = cp.name || "";
+        document.getElementById('cp-owner').value = cp.owner || "";
+        document.getElementById('cp-owner-dni').value = cp.ownerDni || "";
+        document.getElementById('cp-cuit').value = cp.cuit || "";
+        document.getElementById('cp-iibb').value = cp.iibb || "";
+        document.getElementById('cp-prov').value = cp.prov || "LA PAMPA";
+        document.getElementById('cp-city').value = cp.city || "GENERAL PICO";
+        document.getElementById('cp-addr').value = cp.addr || "";
+        document.getElementById('cp-zip').value = cp.zip || "";
+        document.getElementById('cp-tel').value = cp.tel || "";
+        document.getElementById('cp-email').value = cp.email || "";
+        document.getElementById('cp-desc').value = cp.desc || "";
+        document.getElementById('cp-proc').value = cp.proc || "";
+        document.getElementById('cp-start').value = cp.startDate || "";
+        document.getElementById('cp-type').value = cp.type || "REFRIGERACION";
+        document.getElementById('cp-iva').value = cp.iva || "Responsable Inscripto";
+        document.getElementById('cp-agente').value = cp.agente || "";
+        document.getElementById('cp-ruca').value = cp.ruca || "";
+        
+        if (cp.logo) {
+            document.getElementById('cp-logo-img').src = cp.logo;
+            // También actualizar el logo del header!
+            document.querySelector('header img').src = cp.logo;
+        }
+    }
+
+    async function saveCompanyProfile() {
+        const cp = {
+            id: document.getElementById('cp-id').innerText,
+            name: document.getElementById('cp-name').value,
+            owner: document.getElementById('cp-owner').value,
+            ownerDni: document.getElementById('cp-owner-dni').value,
+            cuit: document.getElementById('cp-cuit').value,
+            iibb: document.getElementById('cp-iibb').value,
+            prov: document.getElementById('cp-prov').value,
+            city: document.getElementById('cp-city').value,
+            addr: document.getElementById('cp-addr').value,
+            zip: document.getElementById('cp-zip').value,
+            tel: document.getElementById('cp-tel').value,
+            email: document.getElementById('cp-email').value,
+            desc: document.getElementById('cp-desc').value,
+            proc: document.getElementById('cp-proc').value,
+            startDate: document.getElementById('cp-start').value,
+            type: document.getElementById('cp-type').value,
+            iva: document.getElementById('cp-iva').value,
+            agente: document.getElementById('cp-agente').value,
+            ruca: document.getElementById('cp-ruca').value,
+            logo: document.getElementById('cp-logo-img').src
+        };
+        await db.ref('companyProfile').set(cp);
+        alert("Perfil guardado con éxito");
+    }
+
+    function previewLogo(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            document.getElementById('cp-logo-img').src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function resetLogo() {
+        if(confirm("¿Restablecer logo por defecto?")) {
+            document.getElementById('cp-logo-img').src = "logo.png";
+        }
+    }
+    
+    function renderSucursales() {
+        const tbody = document.getElementById('sucursales-tbody');
+        if(!tbody) return;
+        
+        const q = document.getElementById('suc-search-input').value.toLowerCase();
+        tbody.innerHTML = "";
+        
+        const sucs = Object.keys(data.sucursales || {}).map(k => ({...data.sucursales[k], key: k}));
+        sucs.sort((a,b) => (parseInt(a.order) || 0) - (parseInt(b.order) || 0));
+        
+        sucs.forEach(s => {
+            if (s.name.toLowerCase().includes(q) || q === "") {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="checkbox" class="suc-chk" value="${s.key}"></td>
+                        <td>${s.id || ''}</td>
+                        <td style="font-weight:bold; color: ${s.type === 'ARCA' ? 'var(--blue)' : '#718096'}">
+                            ${s.name} ${s.type === 'ARCA' ? '(A)' : '(X)'}
+                        </td>
+                        <td>${s.order || ''}</td>
+                        <td>${s.number || ''}</td>
+                        <td>${s.addr || '-'}</td>
+                        <td>${s.city || '-'}</td>
+                        <td>${s.prov || '-'}</td>
+                        <td>${s.tel || '-'}</td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    // CRUD SUCURSALES
+    function openSucModal(id = null) {
+        document.getElementById('suc-modal-title').innerText = id ? "Modificar Sucursal" : "Nueva Sucursal";
+        document.getElementById('suc-id-hidden').value = id || "";
+        
+        if (id && data.sucursales[id]) {
+            const s = data.sucursales[id];
+            document.getElementById('suc-name').value = s.name;
+            document.getElementById('suc-order').value = s.order;
+            document.getElementById('suc-number').value = s.number;
+            document.getElementById('suc-type').value = s.type;
+            document.getElementById('suc-addr').value = s.addr;
+            document.getElementById('suc-city').value = s.city;
+        } else {
+            document.getElementById('suc-name').value = "";
+            document.getElementById('suc-order').value = "";
+            document.getElementById('suc-number').value = "";
+            document.getElementById('suc-type').value = "ARCA";
+            document.getElementById('suc-addr').value = "";
+            document.getElementById('suc-city').value = "";
+        }
+        document.getElementById('modal-sucursal').style.display = 'flex';
+    }
+
+    async function saveSucursal() {
+        const key = document.getElementById('suc-id-hidden').value || db.ref('sucursales').push().key;
+        const sData = {
+            name: document.getElementById('suc-name').value,
+            order: document.getElementById('suc-order').value,
+            number: document.getElementById('suc-number').value,
+            type: document.getElementById('suc-type').value,
+            addr: document.getElementById('suc-addr').value,
+            city: document.getElementById('suc-city').value,
+            prov: 'La Pampa',
+            id: key.replace('S-', '')
+        };
+        
+        if(!sData.name) return alert("Ingresa un nombre");
+        await db.ref('sucursales/' + (document.getElementById('suc-id-hidden').value || "S-" + sData.id)).set(sData);
+        closeModal();
+    }
+
+    async function deleteSucursal() {
+        const selected = document.querySelector('.suc-chk:checked');
+        if(!selected) return alert("Selecciona una sucursal para eliminar");
+        if(confirm("¿Estás seguro de eliminar esta sucursal?")) {
+            await db.ref('sucursales/' + selected.value).remove();
+        }
+    }
+
+    function editSelectedSucursal() {
+        const selected = document.querySelector('.suc-chk:checked');
+        if(!selected) return alert("Selecciona una sucursal para modificar");
+        openSucModal(selected.value);
+    }
+
+    function renderStock() {
+        const list = document.getElementById('stock-list');
+        const q = document.getElementById('stock-search').value.toLowerCase();
+        list.innerHTML = "";
+        
+        let camsHTML = "";
+        let prodsHTML = "";
+
+        Object.keys(data.slots || {}).forEach(id => {
+            const s = data.slots[id];
+            
+            // Buscar Cámara
+            if(s.name.toLowerCase().includes(q) || q === "") {
+                camsHTML += `<div class="list-item">
+                    <div onclick="openCamMod('${id}')" style="flex:1; cursor:pointer;"><b>📍 ${s.name}</b><br><small>${id}</small></div> 
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                        <b onclick="openCamMod('${id}')" style="cursor:pointer; font-size:12px; color:var(--dark)">${Object.keys(s.products || {}).length} items</b>
+                        <button class="edit-btn" onclick="showQRCode('${id}')" title="Ver Código QR" style="font-size:12px; background:var(--blue); color:white">🔲 QR</button>
+                    </div>
+                </div>`;
+            }
+            
+            // Buscar Productos dentro de esta Cámara
+            if (q.length > 1) { // Buscar productos solo si hay más de 1 letra
+                Object.keys(s.products || {}).forEach(pid => {
+                    const p = s.products[pid];
+                    if (p.name.toLowerCase().includes(q)) {
+                        prodsHTML += `<div class="list-item" style="border-left-color: var(--blue)" onclick="openCamMod('${id}')">
+                            <div style="flex:1; cursor:pointer;">
+                                <b style="color:var(--dark)">${p.name}</b><br>
+                                <span class="badge" style="background:#bee3f8; color:#2b6cb0; display:inline-block; margin-top:4px;">📍 En: ${s.name}</span>
+                            </div> 
+                            <div style="display:flex; align-items:center; gap: 10px;">
+                                <b style="font-size:14px; color:var(--green)">Stk: ${p.qty}</b>
+                            </div>
+                        </div>`;
+                    }
+                });
+            }
+        });
+
+        if (q !== "" && camsHTML !== "") list.innerHTML += `<h4 style="margin: 10px 0 5px 0; color: #718096; font-size: 13px; text-transform: uppercase;">Cámaras Relacionadas</h4>` + camsHTML;
+        else list.innerHTML += camsHTML;
+        
+        if (prodsHTML !== "") list.innerHTML += `<h4 style="margin: 15px 0 5px 0; color: var(--blue); font-size: 13px; text-transform: uppercase;">Productos Encontrados</h4>` + prodsHTML;
+        
+        if (q !== "" && camsHTML === "" && prodsHTML === "") {
+            list.innerHTML = `<div style="text-align:center; padding:20px; color:#a0aec0; font-size:14px;">No se encontraron cámaras ni productos con esa búsqueda.</div>`;
+        }
+    }
+
+    const PUEBLOS_ZONA = [
+        "GENERAL PICO", "SANTA ROSA", "INTENDENTE ALVEAR", "EMBAJADOR MARTINI", 
+        "COLONIA BARON", "EDUARDO CASTEX", "MONTE NIEVAS", "VILLA SAUZE", "INGENIERO LUIGGI", 
+        "GONZALEZ MORENO", "BERNARDO LARROUDE", "REALICO", "TRENEL", "ARATA", "CALEUFU", 
+        "QUEMU QUEMU", "SPELUZZI", "PARERA", "ACHIRAS", "ALTA ITALIA", "MACACHIN", 
+        "SALLIQUELO", "CATRILO", "LUIGGI", "METILEO", "DORILA", "WINIFREDA", "RIVADAVIA", 
+        "MAZA", "BANDERALO", "ROOSEVELT", "FORTIN", "AMERICA", "PELLEGRINI", "TRES LOMAS", 
+        "RUFINO", "TOAY", "URIBURU", "VICTORICA", "CALEUFU", "VERTIZ", "METILEO", "ALVEAR"
+    ];
+
+    function getTown(addr) {
+        if(!addr) return "OTROS";
+        let u = addr.toUpperCase();
+        for (let p of PUEBLOS_ZONA) {
+            if (u.includes(p)) return p === "LUIGGI" ? "INGENIERO LUIGGI" : p;
+        }
+        return "OTROS";
+    }
+
+    let selectedTown = "";
+    
+    function renderTownFilters() {
+        const container = document.getElementById('town-filters');
+        if (!container) return;
+        
+        let townCounts = {};
+        Object.keys(data.customers || {}).forEach(id => {
+            const addr = data.customers[id].addr || "";
+            const t = getTown(addr);
+            townCounts[t] = (townCounts[t] || 0) + 1;
+        });
+        
+        // Ordenar pueblos de mayor a menor cantidad de clientes
+        let townsArray = Object.keys(townCounts).sort((a, b) => townCounts[b] - townCounts[a]);
+        
+        // Forzar "OTROS" a ir siempre al final
+        if (townsArray.includes("OTROS")) {
+            townsArray = townsArray.filter(t => t !== "OTROS");
+            townsArray.push("OTROS");
+        }
+        
+        let html = `<button class="town-btn ${selectedTown === "" ? 'active' : ''}" onclick="selectTown('')">TODOS</button>`;
+        townsArray.forEach(t => {
+            let label = t === "GENERAL PICO" ? "G. PICO" : t;
+            // Opcional: Mostrar la cantidad al lado del nombre ej: G. PICO (80)
+            html += `<button class="town-btn ${selectedTown === t ? 'active' : ''}" onclick="selectTown('${t}')">${label} (${townCounts[t]})</button>`;
+        });
+        container.innerHTML = html;
+    }
+    
+    function selectTown(t) {
+        selectedTown = t;
+        renderTownFilters(); 
+        renderCustomers();   
+    }
+
+    function renderCustomers() {
+        const list = document.getElementById('cust-list');
+        const searchInput = document.getElementById('cust-search');
+        const q = searchInput ? searchInput.value.toLowerCase() : "";
+        let listStr = "";
+        
+        let count = 0;
+        const custKeys = Object.keys(data.customers || {}).reverse();
+        
+        for(let i = 0; i < custKeys.length; i++) {
+            const id = custKeys[i];
+            const c = data.customers[id];
+            const name = c.name ? c.name.toLowerCase() : "";
+            const cuit = c.cuit ? c.cuit.toLowerCase() : "";
+            const town = getTown(c.addr || "");
+            
+            if (selectedTown !== "" && town !== selectedTown) continue;
+            
+            if(name.includes(q) || cuit.includes(q)) {
+                let badgeTown = town !== "OTROS" ? `📍 ${town}` : c.addr || '';
+                listStr += `<div class="list-item"><div><b style="color:var(--dark)">${c.name}</b><br><small style="color:#718096">${c.cuit || 'Sin CUIT'} - ${badgeTown}</small></div> <button class="edit-btn" onclick="openEdit('customers', '${id}')">✏️</button></div>`;
+                count++;
+                if (q === "" && selectedTown === "" && count >= 30) break; // Límite por defecto
+                if (count >= 150) break; // Límite de búsqueda
+            }
+        }
+        list.innerHTML = listStr;
+    }
+
+    function openCategoryFolder(cat) {
+        currentProdCategory = cat;
+        const searchInput = document.getElementById('master-prod-search');
+        if(searchInput) searchInput.value = "";
+        renderMasterProducts();
+    }
+
+    function renderMasterProducts() {
+        const list = document.getElementById('master-prod-list');
+        const searchInput = document.getElementById('master-prod-search');
+        const q = searchInput ? searchInput.value.toLowerCase() : "";
+        let listStr = "";
+        
+        let count = 0;
+        const keys = Object.keys(data.products || {}).reverse();
+        
+        // 1. MODO BÚSQUEDA GLOBAL (ignora carpetas)
+        if (q !== "") {
+            listStr += `<div style="padding: 10px; color: #718096; font-size: 13px; font-weight: bold; text-transform: uppercase;">🔍 Resultados de búsqueda:</div>`;
+            for (let i = 0; i < keys.length; i++) {
+                const id = keys[i];
+                const p = data.products[id];
+                if (p.isHeader) continue;
+                
+                if (p.name.toLowerCase().includes(q)) {
+                    let cat = p.category || "OTROS";
+                    let badgeCat = `<span class="badge" style="background:#edf2f7; color:#4a5568; margin-top:4px; display:inline-block">📁 ${cat}</span>`;
+                    listStr += `<div class="list-item">
+                        <div style="flex:1"><b>${p.name}</b><br><small style="color:var(--green); font-weight:bold; font-size:14px;">$${p.price}</small><br>${badgeCat}</div> 
+                        <button class="edit-btn" onclick="openEdit('products', '${id}')">✏️</button>
+                    </div>`;
+                    count++;
+                    if (count >= 100) break; 
+                }
+            }
+            list.innerHTML = listStr;
+            return;
+        }
+
+        // 2. MODO RAÍZ (Carpetas)
+        if (currentProdCategory === "TODOS") {
+            let catCounts = {};
+            keys.forEach(id => {
+                const p = data.products[id];
+                let cat = p.category || "OTROS";
+                if (!p.isHeader) {
+                    catCounts[cat] = (catCounts[cat] || 0) + 1;
+                }
+            });
+            
+            const categories = Object.keys(catCounts).sort();
+            
+            listStr += `<div style="padding: 10px; color: #4a5568; font-size: 14px; font-weight: bold; text-transform: uppercase;">📁 Carpetas de Catálogo</div>`;
+            
+            categories.forEach(c => {
+                if (catCounts[c] > 0) {
+                    listStr += `<div class="list-item" style="cursor:pointer; border-left: 5px solid var(--blue);" onclick="openCategoryFolder('${c.replace(/'/g, "\\'")}')">
+                        <div style="flex:1">
+                            <b style="color:var(--blue); font-size:16px;">📁 ${c}</b><br>
+                            <small style="color:#718096; font-weight:bold;">${catCounts[c]} productos</small>
+                        </div>
+                        <span style="color:#cbd5e0; font-size:20px;">❯</span>
+                    </div>`;
+                }
+            });
+            list.innerHTML = listStr;
+            return;
+        }
+
+        // 3. MODO CARPETA ABIERTA (Listar productos de una categoría)
+        listStr += `<button class="btn-main" style="background:#cbd5e0; color:#2d3748; margin-bottom:15px; text-align:left; border-radius: 8px; padding: 10px;" onclick="openCategoryFolder('TODOS')">⬅ Volver a Carpetas</button>`;
+        listStr += `<h3 style="color:var(--dark); margin-top:0">📁 ${currentProdCategory}</h3>`;
+        
+        for (let i = 0; i < keys.length; i++) {
+            const id = keys[i];
+            const p = data.products[id];
+            let cat = p.category || "OTROS";
+            
+            if (p.isHeader) continue;
+            
+            if (cat === currentProdCategory) {
+                listStr += `<div class="list-item">
+                    <div style="flex:1"><b>${p.name}</b><br><small style="color:var(--green); font-weight:bold; font-size:14px;">$${p.price}</small></div> 
+                    <button class="edit-btn" onclick="openEdit('products', '${id}')">✏️</button>
+                </div>`;
+                count++;
+                if (count >= 150) break; 
+            }
+        }
+        list.innerHTML = listStr;
+    }
+
+    // --- LOGICA CAMARAS ---
+    let productMap = {}; 
+    let selectedProd = { id: '', name: '' };
+
+    function openCamMod(id) {
+        curCamId = id;
+        document.getElementById('m-cam-title').innerText = data.slots[id].name;
+        resetProdSearch();
+        renderCamProds();
+        document.getElementById('modal-cam').style.display = 'flex';
+    }
+
+    function resetProdSearch() {
+        selectedProd = { id: '', name: '' };
+        document.getElementById('m-cam-prod-input').value = '';
+        document.getElementById('m-cam-prod-input').style.display = 'block';
+        document.getElementById('m-cam-selected-badge').style.display = 'none';
+        document.getElementById('m-cam-res').style.display = 'none';
+    }
+
+    function filterMasterForCam() {
+        const q = document.getElementById('m-cam-prod-input').value.toLowerCase();
+        const res = document.getElementById('m-cam-res');
+        if (q.length < 2) { res.style.display = 'none'; return; }
+        
+        let resStr = "";
+        let count = 0;
+        Object.keys(data.products || {}).forEach(pid => {
+            const p = data.products[pid];
+            let cat = p.category || "OTROS";
+            
+            if (p.isHeader) return; // No listar headers para agregar
+            
+            if (p.name.toLowerCase().includes(q) && count < 15) {
+                resStr += `<div class="search-item" onclick="selectProdForCam('${pid}', '${p.name.replace(/'/g, "\\'")}')">
+                    <b>${p.name}</b>
+                    <span style="font-size:11px; color:#718096; float:right">📂 ${cat}</span>
+                </div>`;
+                count++;
+            }
+        });
+        res.innerHTML = resStr;
+        res.style.display = count > 0 ? 'block' : 'none';
+    }
+
+    function selectProdForCam(pid, name) {
+        selectedProd = { id: pid, name: name };
+        const badge = document.getElementById('m-cam-selected-badge');
+        badge.innerHTML = `📦 Seleccionado: ${name} <span onclick="resetProdSearch()" style="float:right; cursor:pointer">✖</span>`;
+        badge.style.display = 'block';
+        document.getElementById('m-cam-prod-input').style.display = 'none';
+        document.getElementById('m-cam-res').style.display = 'none';
+    }
+
+    function renderCamProds() {
+        const list = document.getElementById('m-cam-list');
+        list.innerHTML = "<h4 style='margin-top:20px; color:#4a5568'>📦 Stock actual en cámara:</h4>";
+        const ps = data.slots[curCamId].products || {};
+        const keys = Object.keys(ps);
+        
+        if(keys.length === 0) {
+            list.innerHTML += `<p style="color:#a0aec0; font-size:13px; text-align:center; padding:20px; border: 2px dashed #edf2f7; border-radius:10px">No hay productos en esta cámara.</p>`;
+            return;
+        }
+
+        keys.forEach(pid => {
+            const p = ps[pid];
+            list.innerHTML += `
+                <div class="stock-row">
+                    <div class="stock-info">
+                        <b>${p.name}</b>
+                        <small>CANTIDAD: ${p.qty}</small>
+                    </div>
+                    <div class="stock-actions">
+                        <button class="btn-edit" title="Editar" onclick="editCamProd('${pid}', ${p.qty})">✏️</button>
+                        <button class="btn-del" title="Eliminar" onclick="deleteFromCam('${pid}')">✖</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    async function editCamProd(pid, oldQty) {
+        const newQty = prompt("Editar cantidad para:\n" + data.slots[curCamId].products[pid].name, oldQty);
+        if (newQty !== null && !isNaN(parseFloat(newQty))) {
+            await db.ref(`slots/${curCamId}/products/${pid}/qty`).set(parseFloat(newQty));
+        }
+    }
+
+    async function addProdToCamera() {
+        const qty = parseFloat(document.getElementById('m-cam-qty').value);
+        if(!selectedProd.id || isNaN(qty)) return alert("Elige un producto del catálogo y la cantidad");
+        await db.ref(`slots/${curCamId}/products/${selectedProd.id}`).set({ name: selectedProd.name, qty });
+        document.getElementById('m-cam-qty').value = "";
+        resetProdSearch();
+    }
+
+    // --- PEDIDOS ---
+    function updateDropdowns() {
+        const cS = document.getElementById('ord-cust-sel');
+        cS.innerHTML = '<option value="">Seleccionar Cliente...</option>';
+        Object.keys(data.customers || {}).forEach(id => cS.innerHTML += `<option value="${id}">${data.customers[id].name}</option>`);
+    }
+
+    let selectedOrderProd = { cId: '', pId: '', name: '', stock: 0, cam: '' };
+
+    function filterStockGlobal() {
+        const q = document.getElementById('ord-prod-search').value.toLowerCase();
+        const res = document.getElementById('ord-res');
+        if (q.length < 2) { res.style.display = 'none'; return; }
+        
+        let resStr = "";
+        let count = 0;
+        let foundInStock = new Set();
+
+        // 1. Buscar en Cámaras (STOCK REAL)
+        Object.keys(data.slots || {}).forEach(cId => {
+            const camName = data.slots[cId].name;
+            const prods = data.slots[cId].products || {};
+            Object.keys(prods).forEach(pId => {
+                const p = prods[pId];
+                if (p.name.toLowerCase().includes(q) && count < 20) {
+                    foundInStock.add(pId);
+                    const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeCam = camName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    
+                    resStr += `
+                        <div class="search-item" onclick="selectOrderProd('${cId}', '${pId}', '${safeName}', ${p.qty}, '${safeCam}')">
+                            <b style="color:var(--dark)">${p.name}</b><br>
+                            <span class="badge" style="background:#c6f6d5; color:#22543d">📦 STOCK: ${p.qty}</span> 
+                            <small style="color:var(--blue); font-weight:bold">📍 ${camName}</small>
+                        </div>`;
+                    count++;
+                }
+            });
+        });
+
+        // 2. Buscar en Catálogo (LO QUE NO TIENE STOCK)
+        Object.keys(data.products || {}).forEach(pId => {
+            const p = data.products[pId];
+            let cat = p.category || "OTROS";
+            
+            if (p.isHeader) return; // Omitir catalog headers
+
+            if (p.name.toLowerCase().includes(q) && !foundInStock.has(pId) && count < 25) {
+                const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                resStr += `
+                    <div class="search-item" style="border-left:4px solid #cbd5e0; opacity:0.8" onclick="selectOrderProd('', '${pId}', '${safeName}', 0, 'S/Cámara')">
+                        <b style="color:#4a5568">${p.name}</b><br>
+                        <span class="badge" style="background:#edf2f7; color:#4a5568">⚠️ SIN STOCK (Catálogo)</span>
+                        <span class="badge" style="background:#e2e8f0; color:#4a5568">📂 ${cat}</span>
+                    </div>`;
+                count++;
+            }
+        });
+
+        if (count === 0) resStr = `<div style="padding:15px; text-align:center; color:#a0aec0; font-size:13px">No se encontraron productos</div>`;
+        res.innerHTML = resStr;
+        res.style.display = 'block';
+    }
+
+    function selectOrderProd(cId, pId, name, stock, cam) {
+        selectedOrderProd = { cId, pId, name, stock, cam };
+        const badge = document.getElementById('ord-selected-badge');
+        badge.innerHTML = `📦 ${name} (Stock: ${stock} en ${cam}) <span onclick="resetOrderSearch()" style="float:right; cursor:pointer">✖</span>`;
+        badge.style.display = 'block';
+        document.getElementById('ord-prod-search').style.display = 'none';
+        document.getElementById('ord-res').style.display = 'none';
+    }
+
+    function resetOrderSearch() {
+        selectedOrderProd = { cId: '', pId: '', name: '', stock: 0, cam: '' };
+        document.getElementById('ord-prod-search').value = '';
+        document.getElementById('ord-prod-search').style.display = 'block';
+        document.getElementById('ord-selected-badge').style.display = 'none';
+        document.getElementById('ord-res').style.display = 'none';
+    }
+
+
+
+    function addToCart() {
+        const qty = parseFloat(document.getElementById('ord-qty').value);
+        if(!selectedOrderProd.pId || isNaN(qty)) return alert("Elige un producto y la cantidad");
+        
+        if(selectedOrderProd.cId && qty > selectedOrderProd.stock) {
+            if(!confirm(`⚠️ Stock insuficiente en ${selectedOrderProd.cam} (Disponible: ${selectedOrderProd.stock}). ¿Desea agregarlo de todas formas?`)) return;
+        } else if(!selectedOrderProd.cId) {
+            if(!confirm(`⚠️ Este producto no tiene stock en ninguna cámara. ¿Desea agregarlo al pedido de todas formas?`)) return;
+        }
+        
+        cart.push({ 
+            cId: selectedOrderProd.cId || 'SIN-STOCK', 
+            pId: selectedOrderProd.pId, 
+            qty: qty, 
+            name: selectedOrderProd.name, 
+            cam: selectedOrderProd.cam || 'Sin Cámara'
+        });
+        
+        document.getElementById('ord-qty').value = "";
+        resetOrderSearch();
+        renderCart();
+    }
+
+    function renderCart() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = cart.length ? '<h4>Items:</h4>' : '';
+        cart.forEach((it, idx) => list.innerHTML += `<div class="row-item">${it.name} x ${it.qty} <button onclick="cart.splice(${idx},1);renderCart()" style="color:red;border:none;background:none">✖</button></div>`);
+        document.getElementById('btn-sell').style.display = cart.length ? 'block' : 'none';
+    }
+
+    async function finalizeOrder() {
+        const cId = document.getElementById('ord-cust-sel').value;
+        if(!cId) return alert("Elige cliente");
+        const updates = {};
+        const vId = 'VTA-' + Date.now();
+        cart.forEach(it => {
+            const cur = data.slots[it.cId].products[it.pId].qty;
+            updates[`slots/${it.cId}/products/${it.pId}/qty`] = cur - it.qty;
+        });
+        updates[`orders/${vId}`] = { customer: data.customers[cId].name, items: cart, date: new Date().toLocaleString() };
+        await db.ref().update(updates);
+        alert("Venta procesada"); cart = []; renderCart();
+    }
+
+    // --- EDICIÓN ---
+    function openEdit(type, id) {
+        curEdit = { type, id };
+        const entry = data[type][id];
+        const fields = document.getElementById('edit-fields');
+        fields.innerHTML = "";
+        Object.keys(entry).forEach(key => {
+            fields.innerHTML += `<label style="font-size:12px">${key.toUpperCase()}</label><input type="text" id="edit-${key}" value="${entry[key]}">`;
+        });
+        document.getElementById('edit-title').innerText = "Editar " + type.slice(0,-1);
+        document.getElementById('modal-edit').style.display = 'flex';
+    }
+
+    async function updateEntry() {
+        const entry = data[curEdit.type][curEdit.id];
+        const newEntry = {};
+        Object.keys(entry).forEach(key => newEntry[key] = document.getElementById('edit-' + key).value);
+        await db.ref(`${curEdit.type}/${curEdit.id}`).set(newEntry);
+        closeModal();
+    }
+
+    // --- HELPERS ---
+    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+    function renderOrders() {
+        const list = document.getElementById('order-history');
+        list.innerHTML = "<h3>Últimas Ventas</h3>";
+        Object.keys(data.orders || {}).reverse().slice(0, 10).forEach(id => {
+            const o = data.orders[id];
+            list.innerHTML += `<div class="card" style="font-size:12px"><b>${o.customer}</b> <small style="float:right">${o.date}</small><br>${o.items.map(i => i.name + ' x ' + i.qty).join(', ')}</div>`;
+        });
+    }
+    function saveMasterProduct() {
+        const name = document.getElementById('p-name').value;
+        const price = document.getElementById('p-price').value;
+        if(name) db.ref('products').push({ name, price });
+        document.getElementById('p-name').value = ""; document.getElementById('p-price').value = "";
+    }
+    function saveCustomer() {
+        const name = document.getElementById('c-name').value;
+        const cuit = document.getElementById('c-cuit').value;
+        const addr = document.getElementById('c-addr').value;
+        if(name) db.ref('customers').push({ name, cuit, addr });
+        document.getElementById('c-name').value = ""; document.getElementById('c-cuit').value = ""; document.getElementById('c-addr').value = "";
+    }
+    function createCamera() {
+        const name = document.getElementById('new-cam-name').value;
+        if(name) db.ref('slots/' + 'CAM-' + Date.now().toString(36).toUpperCase()).set({ name });
+        document.getElementById('new-cam-name').value = "";
+    }
+    async function deleteFromCam(pid) { if(confirm("¿Quitar stock de cámara?")) await db.ref(`slots/${curCamId}/products/${pid}`).remove(); }
+
+    let scanner;
+    function initScan() {
+        scanner = new Html5Qrcode("reader");
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, (id) => {
+            // El escaner viejo devolverá la URL completa ahora, o el ID crudo.
+            // Para mantener compatibilidad, sacaremos el ID de la URL si es necesario.
+            let scanId = id;
+            if (id.includes('?cam=')) {
+                scanId = id.split('?cam=')[1].split('&')[0];
+            }
+            if(data.slots[scanId]) { scanner.stop(); openCamMod(scanId); }
+        }).catch(() => {});
+    }
+    function stopScan() { if(scanner && scanner.isScanning) scanner.stop(); }
+
+    // Generador de QR
+    function showQRCode(camId) {
+        const cam = data.slots[camId];
+        if(!cam) return;
+        
+        document.getElementById('qr-cam-title').innerText = "QR para Cámara";
+        document.getElementById('qr-print-title').innerText = cam.name;
+        
+        const qrContainer = document.getElementById('qr-code-img');
+        qrContainer.innerHTML = ""; 
+        
+        let currentUrl = window.location.href.split('?')[0]; 
+        let scanUrl = currentUrl + "?cam=" + camId;
+        
+        new QRCode(qrContainer, {
+            text: scanUrl,
+            width: 200,
+            height: 200,
+            colorDark : "#1a202c",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+        
+        document.getElementById('modal-qr').style.display = 'flex';
+    }
+
+</script>
+</body>
+</html>tml…]()
